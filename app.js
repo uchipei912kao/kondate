@@ -84,7 +84,7 @@
     var ft = forbiddenTags(p);
     for (var i = 0; i < ft.length; i++) if (r.tags.indexOf(ft[i]) >= 0) return false;
     var w = ngWords(p);
-    for (var j = 0; j < w.length; j++) if (w[j] && r.text.indexOf(w[j]) >= 0) return false;
+    for (var j = 0; j < w.length; j++) if (w[j] && (r.text.indexOf(w[j]) >= 0 || r.tags.indexOf(w[j]) >= 0)) return false;   // 「きのこ」などはタグでも一致
     if (!relax && recent[r.id]) return false;
     if (ctx.time && r.time > ctx.time && !relax) return false;
     return true;
@@ -348,6 +348,7 @@
 
   // ---------- 起動 ----------
   S = load(); applyFont();
+  window.__kondate = { recipes: RECIPES, ng: NG, allowed: function (r, p) { return allowed(r, p, {}, true); }, state: function () { return S; } };   // 動作確認用
   var hour = new Date().getHours();
   $('homeGreet').textContent = hour < 10 ? '朝ごはん・お弁当の参考にも' : hour < 15 ? '今日の晩ごはん、何にしましょう' : '今日は何にしましょう';
   show('home');
