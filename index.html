@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>きょうのごはん</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="きょうのごはん">
+<meta name="theme-color" content="#ff8a3d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --fs: 22px; --orange: #ff8a3d; --orange-d: #e0742a; --green: #3aa76d; --green-d: #2e8a58; --blue: #3b82c4; --red: #d9534f; --gray: #f2f2f2; --ink: #222; --sub: #666; }
+  html.xl { --fs: 26px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #fffaf3; color: var(--ink); font-family: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; font-size: var(--fs); line-height: 1.5; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .top { position: sticky; top: 0; z-index: 5; background: var(--orange); color: #fff; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; display: flex; align-items: center; gap: 10px; min-height: 64px; }
+  .top .back { background: rgba(255,255,255,.22); border: 0; color: #fff; font-size: 0.9em; font-weight: 700; padding: 8px 10px; border-radius: 12px; min-height: 48px; flex: 0 0 auto; }
+  .top h1 { margin: 0; font-size: 0.95em; font-weight: 800; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .top .spacer { width: 0; flex: 0 0 auto; }
+  .top.home .back { display: none; }
+  .screen { display: none; padding: 16px 14px 30px; max-width: 640px; margin: 0 auto; }
+  .screen.active { display: block; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 18px; padding: 18px 16px; font-size: 1.1em; font-weight: 800; color: #fff; background: var(--orange); margin: 12px 0; min-height: 72px; text-align: center; box-shadow: 0 3px 0 var(--orange-d); }
+  .btn:active { transform: translateY(2px); box-shadow: none; }
+  .btn.green { background: var(--green); box-shadow: 0 3px 0 var(--green-d); }
+  .btn.blue { background: var(--blue); box-shadow: 0 3px 0 #2c65a0; }
+  .btn.gray { background: #fff; color: var(--ink); border: 2px solid #ddd; box-shadow: 0 3px 0 #ddd; font-weight: 700; }
+  .btn.small { min-height: 54px; padding: 12px 14px; font-size: 0.95em; }
+  .btn.sub { background: #fff; color: var(--sub); border: 2px solid #e5e5e5; box-shadow: none; font-weight: 600; min-height: 50px; padding: 10px; font-size: 0.9em; }
+  .btn.red { background: var(--red); box-shadow: 0 3px 0 #b33; }
+  .btn .em { font-size: 1.4em; margin-right: 6px; vertical-align: middle; }
+  .hint { color: var(--sub); font-size: 0.85em; margin: 6px 2px 14px; }
+  .card { background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .card h3 { margin: 0 0 6px; font-size: 1.15em; }
+  .card .meta { color: var(--sub); font-size: 0.85em; }
+  .slot-label { display: inline-block; background: var(--gray); border-radius: 8px; padding: 2px 10px; font-size: 0.8em; color: var(--sub); margin-bottom: 6px; }
+  .row { display: flex; gap: 10px; }
+  .row .btn { margin: 8px 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 14px; }
+  .chip { border: 2px solid #ddd; background: #fff; border-radius: 30px; padding: 12px 16px; font-size: 0.95em; font-weight: 700; color: var(--ink); min-height: 52px; }
+  .chip.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .chip.ng.on { background: var(--red); border-color: var(--red); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid .chip { text-align: center; }
+  h2 { font-size: 1.15em; margin: 14px 0 8px; }
+  ul.ing { list-style: none; padding: 0; margin: 0; }
+  ul.ing li { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px; border-bottom: 1px solid #eee; }
+  ul.ing li .q { color: var(--sub); font-size: 0.9em; }
+  ul.ing li.basic { color: #888; }
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; }
+  ol.steps li { counter-increment: s; display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+  ol.steps li::before { content: counter(s); flex: 0 0 44px; height: 44px; border-radius: 50%; background: var(--orange); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.1em; }
+  .tip { background: #fff4e5; border-left: 5px solid var(--orange); padding: 10px 12px; border-radius: 8px; margin: 12px 0; font-size: 0.95em; }
+  .hist { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 14px; padding: 10px; margin: 10px 0; box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+  .hist img, .hist .noimg { width: 84px; height: 84px; border-radius: 12px; object-fit: cover; background: var(--gray); flex: 0 0 84px; display: flex; align-items: center; justify-content: center; font-size: 2em; }
+  .hist .t { flex: 1; min-width: 0; }
+  .hist .t b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hist .t span { color: var(--sub); font-size: 0.85em; }
+  .shop li { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid #eee; font-size: 1.05em; }
+  .shop li.done { color: #aaa; text-decoration: line-through; }
+  .shop li .chk { width: 40px; height: 40px; border-radius: 10px; border: 3px solid var(--green); flex: 0 0 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; }
+  .shop li.done .chk { background: var(--green); }
+  input[type=text], select, textarea { width: 100%; font-size: 1em; padding: 12px; border: 2px solid #ddd; border-radius: 12px; background: #fff; font-family: inherit; }
+  label.f { display: block; margin: 12px 0 4px; font-weight: 700; }
+  .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: #333; color: #fff; padding: 14px 20px; border-radius: 14px; font-size: 0.95em; display: none; z-index: 20; max-width: 90%; text-align: center; }
+  .toast.show { display: block; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 30; padding: 20px; }
+  .overlay.show { display: flex; }
+  .overlay .box { background: #fff; border-radius: 20px; padding: 20px; width: 100%; max-width: 480px; }
+  .photo-prev { width: 100%; max-height: 260px; object-fit: cover; border-radius: 14px; margin: 10px 0; }
+  .bigname { font-size: 1.4em; font-weight: 900; margin: 6px 0; }
+  .person { display: flex; align-items: center; gap: 12px; }
+  .person .em { font-size: 1.6em; }
+  .person .ngs { color: var(--sub); font-size: 0.8em; display: block; font-weight: 500; }
+  .warn { color: var(--red); font-weight: 700; }
+  .usage p { margin: 8px 0; }
+  .home-title { text-align: center; font-size: 1.05em; color: var(--sub); margin: 4px 0 10px; }
+</style>
+</head>
+<body>
+<div class="top"><button class="back" id="backBtn">◀ もどる</button><h1 id="title">きょうのごはん</h1><div class="spacer"></div></div>
+
+<!-- ホーム -->
+<section class="screen" id="s-home">
+  <div class="home-title" id="homeGreet">今日は何にしましょう</div>
+  <button class="btn" id="goSuggest"><span class="em">🍳</span>今日なにつくる？</button>
+  <button class="btn green" id="goIng"><span class="em">🥕</span>ある食材から</button>
+  <button class="btn blue" id="goMade"><span class="em">📷</span>作った！を記録</button>
+  <div class="row">
+    <button class="btn gray small" id="goHistory">📖 記録</button>
+    <button class="btn gray small" id="goShop">🛒 買い物</button>
+  </div>
+  <button class="btn sub" id="goSettings">⚙ 設定・人の登録</button>
+</section>
+
+<!-- だれに -->
+<section class="screen" id="s-who">
+  <div class="hint">だれに作りますか？</div>
+  <div id="whoList"></div>
+  <button class="btn sub" id="whoAdd">＋ 人を追加する</button>
+</section>
+
+<!-- 献立 -->
+<section class="screen" id="s-plan">
+  <div class="hint" id="planFor"></div>
+  <div class="chips" id="planChips"></div>
+  <div id="planList"></div>
+  <button class="btn gray small" id="planAgain">🔄 全部作り直す</button>
+</section>
+
+<!-- レシピ -->
+<section class="screen" id="s-recipe">
+  <div class="bigname" id="rName"></div>
+  <div class="meta" id="rMeta"></div>
+  <div class="tip" id="rTip"></div>
+  <h2>材料（2人分）</h2>
+  <div class="hint">家に無いものは □ を押すと買い物リストに入ります</div>
+  <ul class="ing" id="rIng"></ul>
+  <h2>作り方</h2>
+  <ol class="steps" id="rSteps"></ol>
+  <button class="btn green" id="rMade"><span class="em">📷</span>作った！</button>
+  <button class="btn gray small" id="rShop">🛒 チェックした材料を買い物リストへ</button>
+</section>
+
+<!-- 作った！記録 -->
+<section class="screen" id="s-made">
+  <div class="hint">どれを作りましたか？</div>
+  <div id="madeList"></div>
+  <label class="f">別の料理を入力</label>
+  <input type="text" id="madeText" placeholder="料理名">
+  <button class="btn green small" id="madeTextBtn">この料理を記録</button>
+</section>
+
+<!-- 記録 -->
+<section class="screen" id="s-history">
+  <div class="hint">作った記録。同じ料理はしばらく提案されません</div>
+  <div id="histList"></div>
+</section>
+
+<!-- 記録の詳細 -->
+<section class="screen" id="s-histdetail">
+  <img class="photo-prev" id="hdPhoto" style="display:none">
+  <div class="bigname" id="hdName"></div>
+  <div class="meta" id="hdMeta"></div>
+  <div class="row">
+    <button class="btn green small" id="hdUp">👍 また作りたい</button>
+    <button class="btn gray small" id="hdDown">👎 イマイチ</button>
+  </div>
+  <button class="btn blue small" id="hdRecipe">📖 レシピを見る</button>
+  <button class="btn sub" id="hdDelete">この記録を消す</button>
+</section>
+
+<!-- 食材から -->
+<section class="screen" id="s-ing">
+  <div class="hint">家にある食材を押してください（いくつでも）</div>
+  <div id="ingGroups"></div>
+  <input type="text" id="ingText" placeholder="ほかの食材（例: れんこん）">
+  <button class="btn green" id="ingGo">この食材で提案する</button>
+</section>
+
+<!-- 買い物 -->
+<section class="screen" id="s-shop">
+  <ul class="shop" id="shopList"></ul>
+  <div class="hint" id="shopEmpty">買い物リストは空です</div>
+  <input type="text" id="shopText" placeholder="追加する品物">
+  <button class="btn gray small" id="shopAdd">＋ 追加</button>
+  <button class="btn blue small" id="shopShare">📤 LINEなどで送る</button>
+  <button class="btn sub" id="shopClear">買ったものを消す</button>
+</section>
+
+<!-- 設定 -->
+<section class="screen" id="s-settings">
+  <h2>人の登録</h2>
+  <div id="setPeople"></div>
+  <button class="btn sub" id="setAdd">＋ 人を追加する</button>
+  <h2>文字の大きさ</h2>
+  <div class="chips"><button class="chip" id="fontL">大きい</button><button class="chip" id="fontXL">もっと大きい</button></div>
+  <h2>同じ料理を出さない期間</h2>
+  <select id="avoidDays"><option value="7">1週間</option><option value="14">2週間</option><option value="21">3週間</option><option value="30">1か月</option></select>
+  <h2>データ</h2>
+  <button class="btn gray small" id="backupOut">📤 バックアップを送る</button>
+  <label class="btn gray small" style="display:block">📥 バックアップを読み込む<input type="file" id="backupIn" accept=".json,application/json" style="display:none"></label>
+  <button class="btn sub" id="goUsage">📖 使い方</button>
+</section>
+
+<!-- 人の編集 -->
+<section class="screen" id="s-person">
+  <label class="f">名前</label>
+  <input type="text" id="pName" placeholder="例: お父さん、山田さん">
+  <label class="f">どちらですか</label>
+  <div class="chips"><button class="chip" id="pKindFam">家族</button><button class="chip" id="pKindWork">訪問先</button></div>
+  <label class="f">食べられないもの・気をつけること（押して選ぶ）</label>
+  <div class="grid" id="pNg"></div>
+  <label class="f">ほかに避けたいもの（言葉で。「、」で区切る）</label>
+  <input type="text" id="pWords" placeholder="例: きのこ、ピーマン">
+  <label class="f">メモ</label>
+  <input type="text" id="pNote" placeholder="例: 小食、甘いもの好き">
+  <button class="btn green" id="pSave">保存する</button>
+  <button class="btn sub" id="pDelete">この人を削除</button>
+</section>
+
+<!-- 使い方 -->
+<section class="screen usage" id="s-usage">
+  <p><b>🍳 今日なにつくる？</b><br>人を選ぶと「主菜・副菜・汁物」の3品が出ます。気に入らない品は「別のにする」。料理名を押すと作り方が出ます。</p>
+  <p><b>📷 作った！</b><br>作り方の画面の「作った！」か、ホームの「作った！を記録」から。写真は撮っても撮らなくてもOK。記録した料理は、設定の期間はまた出てきません。</p>
+  <p><b>🥕 ある食材から</b><br>家にある食材を押すと、それを使う料理を優先して出します。</p>
+  <p><b>🛒 買い物</b><br>作り方の材料で「□」を押すと買い物リストに入ります。「送る」でLINEに貼れます。</p>
+  <p><b>⚙ 人の登録</b><br>食べられないものは人ごとに登録できます。「生もの禁止」を選ぶと、生野菜や刺身など火を通していない料理は出なくなります。</p>
+  <p><b>ホーム画面に置く</b><br>Safariの「共有」ボタン（□↑）→「ホーム画面に追加」で、アプリのように使えます。</p>
+  <p class="hint">このアプリはインターネットにつながなくても動きます。記録はこのスマホの中だけに保存されます。機種変更のときは設定の「バックアップを送る」で自分に送っておいてください。</p>
+</section>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="ov">
+  <div class="box">
+    <div class="bigname" id="ovName"></div>
+    <div class="hint">写真を撮っておくと記録に残ります</div>
+    <img class="photo-prev" id="ovPhoto" style="display:none">
+    <label class="btn blue" style="display:block">📷 写真をとる<input type="file" id="ovFile" accept="image/*" capture="environment" style="display:none"></label>
+    <button class="btn green" id="ovSave">✔ 記録する</button>
+    <button class="btn sub" id="ovCancel">やめる</button>
+  </div>
+</div>
+
+<script src="recipes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
